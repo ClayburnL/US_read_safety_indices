@@ -12,43 +12,45 @@ function [MI] = GetMI(i, folders, scanner, invert, binarise)
         X=255-X;
     end
     if binarise==1
-        X=rgb2gray(X);  % might be optimal for all?
+        if size(X,3)==3 % check that image is rgb
+            X=rgb2gray(X);
+        end
         X=imbinarize(X);
     end
     if strcmp(scanner, 'Voluson E8')
         roi=[2731.27045795964	135.625746618147	254.174854943445	61.3525511932452];
+    elseif strcmp(scanner, 'LOGIQE9')
+        roi=[3602.50090915119	8.40282503022706	226.142377788038	93.6180811273060];
+    elseif strcmp(scanner, 'HERA W10 Elite')
+        roi=[3192.73046357616	10	233.269536423839	100.500000000001];
     elseif strcmp(scanner, 'iU22')
-        % roi=[ 44.1431  469.7981   82.2764   75.8914];
-    elseif strcmp(scanner, 'Aplio MX')
-        % roi =1.0e+03 *[ 2.0464    0.7058    0.1021    0.0731];
+        roi =[2731.66115562271	12.4986035279142	250	91.9635794592020];
     end
     
-    % if strcmp(scanner, 'iU22') % not optimal for all!
+    % if strcmp(scanner, 'x') % not optimal for all!
     %     ocrResults = ocr(X,roi, LayoutAnalysis="line");
     % else
         ocrResults = ocr(X,roi);
     % end
     
     str=ocrResults.Text;
-    % % find 'MI' in text - can this be simplified like e.g. GetReverb logic?
-    if strcmp(scanner, 'Voluson E8')
+    % % find 'MI' in text
+    if strcmp(scanner, 'Voluson E8') || strcmp(scanner, 'LOGIQE9') || strcmp(scanner, 'HERA W10 Elite') || strcmp(scanner, 'iU22')
         idx=0;
-        for c=1:length(str)-1
-            if str(c:c+1)=='MI'
-                idx=c;
+        if isempty(str)
+            str='Error';
+        else
+            for c=1:length(str)-1
+                if str(c:c+1)=='MI'
+                    idx=c;
+                end
+            end
+            if idx>0
+                str=str(idx+3:idx+5);
+            else
+                str='Error';
             end
         end
-        if idx>0
-            str=str(idx+3:idx+5);
-        else
-            str='Error';
-        end
-    elseif strcmp(scanner, 'iU22')
-    %     if isempty(str)
-    %         str='Error';
-    %     elseif contains(str,'%')  % remove %
-    %         str(str=='%')=[];
-    %     end
     end
     
     % only accept numbers

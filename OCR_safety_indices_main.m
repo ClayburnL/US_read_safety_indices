@@ -7,10 +7,15 @@
 % Code dir: C:\Users\clayb\OneDrive\Documents\STP\US\Y3\OCR_safety_indices\USQA-main
 % Inputs: target folder, outputs: results
 
-% WIP: only looked at GE Voluson E8 so far, and no TIC
+% WIP: only looked at a subset of scanners with minimal tweaking so far, and no TIC
+% needs more thorough training and test
+% needs better distinguishing of TIS and TIB
 
 %% Training data
-cd('C:\Users\clayb\OneDrive\Documents\STP\US\Y3\OCR_safety_indices\Jan training data\GE_2018-00856\01')
+% cd('C:\Users\clayb\OneDrive\Documents\STP\US\Y3\OCR_safety_indices\Jan training data\GE_2018-00856\01')
+cd('C:\Users\clayb\OneDrive\Documents\STP\US\Y3\OCR_safety_indices\LC\Decomp_Files_1'); % lung
+% cd('C:\Users\clayb\OneDrive\Documents\STP\US\Y3\OCR_safety_indices\LC\Decomp_Files_2'); % obs
+% cd('C:\Users\clayb\OneDrive\Documents\STP\US\Y3\OCR_safety_indices\LC\Decomp_Files_3'); % eye
 
 % initialise
 invert=1; % black on white easiest to read, and sometimes text is highlighted (inverted)
@@ -27,11 +32,11 @@ date=dicominfo(folders(3).name).StudyDate;
 results=cell((length(folders)-2),3); % MI, TIs, TIb
 
 for im=1:(length(folders)-2) % for each image
-   
+
     % Get MI
     results{im,1}=GetMI(im+2, folders, scannerModel, invert, binarise);
     if(strcmp(results{im,1}, 'Error')) % if error, try again with different parameters
-        results{im,1}=GetMI(im+2, folders, scannerModel, invert, 1);
+            results{im,1}=GetMI(im+2, folders, scannerModel, invert, 1);
     end
     if(strcmp(results{im,1}, 'Error')) % if error, prompt for manual input
         image_data=dicomread(folders(im+2).name);
@@ -46,7 +51,7 @@ for im=1:(length(folders)-2) % for each image
     % Get TIs
     results{im,2}=GetTIs(im+2, folders, scannerModel, invert, binarise);
     if(strcmp(results{im,2}, 'Error')) % if error, try again with different parameters
-        results{im,2}=GetMI(im+2, folders, scannerModel, invert, 1);
+        results{im,2}=GetTIs(im+2, folders, scannerModel, invert, 1);
     end
     if(strcmp(results{im,2}, 'Error')) % if error, prompt for manual input
         image_data=dicomread(folders(im+2).name);
@@ -61,10 +66,10 @@ for im=1:(length(folders)-2) % for each image
     % Get TIb
     results{im,3}=GetTIb(im+2, folders, scannerModel, invert, binarise);
      if(strcmp(results{im,3}, 'Error')) % if error, try again with different parameters
-        results{im,3}=GetMI(im+3, folders, scannerModel, invert, 1);
+        results{im,3}=GetTIb(im+2, folders, scannerModel, invert, 1);
     end
     if(strcmp(results{im,3}, 'Error')) % if error, prompt for manual input
-        image_data=dicomread(folders(im+3).name);
+        image_data=dicomread(folders(im+2).name);
         disp('Read TIb');
         pause(1)
         figure;imshow(image_data);

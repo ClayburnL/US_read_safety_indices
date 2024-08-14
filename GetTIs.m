@@ -4,8 +4,6 @@
 % Lloyd Clayburn (lloyd.clayburn@nhs.net), 
 %-------------------------------------------------------------------------
 
-% Only set up for GE Voluson so far
-
 function [TIs] = GetTIs(i, folders, scanner, invert, binarise)
 
     X=dicomread(folders(i).name);
@@ -14,15 +12,19 @@ function [TIs] = GetTIs(i, folders, scanner, invert, binarise)
         X=255-X;
     end
     if binarise==1
-        X=rgb2gray(X);  % might be optimal for all?
+        if size(X,3)==3 % check that image is rgb
+            X=rgb2gray(X);
+        end
         X=imbinarize(X);
     end
     if strcmp(scanner, 'Voluson E8')
         roi=[2728.27175137700	9.68007014729005	254.174854943445	61.3525511932452]; % TIs
+    elseif strcmp(scanner, 'LOGIQE9')
+        roi=[3884.50633800060	13.8606872189131	258.338810264466	93.6180811273060];
+    elseif strcmp(scanner, 'HERA W10 Elite')
+        roi=[3194.23466156077	104.764473030388	233.269536423839	100.500000000001];
     elseif strcmp(scanner, 'iU22')
-        % roi=[ 44.1431  469.7981   82.2764   75.8914];
-    elseif strcmp(scanner, 'Aplio MX')
-        % roi =1.0e+03 *[ 2.0464    0.7058    0.1021    0.0731];
+        roi =[2464	10	250	100];
     end
     
     % if strcmp(scanner, 'iU22') % not optimal for all!
@@ -32,23 +34,39 @@ function [TIs] = GetTIs(i, folders, scanner, invert, binarise)
     % end
     
     str=ocrResults.Text;
-    % find 's' from TIs in text - can this be simplified like e.g. GetReverb logic?
-    if strcmp(scanner, 'Voluson E8')
+    % find 's' from TIs in text
+    if strcmp(scanner, 'Voluson E8') || strcmp(scanner, 'LOGIQE9') || strcmp(scanner, 'HERA W10 Elite')
         idx=0;
-        for c=1:length(str)-2
-            if str(c)=='s'
-                idx=c;
+        if isempty(str)
+            str='Error';
+        else
+            for c=1:length(str)-1
+                if str(c)=='s'
+                    idx=c;
+                end
+            end
+            if idx>0
+                str=str(idx+2:idx+5);
             end
         end
-        if idx>0
-            str=str(idx+2:idx+5);
-        end
     elseif strcmp(scanner, 'iU22')
-    %     if isempty(str)
-    %         str='Error';
-    %     elseif contains(str,'%')  % remove %
-    %         str(str=='%')=[];
-    %     end
+        idx=0;
+        if isempty(str)
+            str='Error';
+        else
+            for c=1:length(str)-1
+                if str(c)=='S'
+                    idx=c;
+                end
+            end
+            if idx>0
+                if length(str)>idx+2
+                    str=str(idx+1:idx+3);
+                else
+                    str='Error';
+                end
+            end
+        end
     end
 
     % % only accept numbers
